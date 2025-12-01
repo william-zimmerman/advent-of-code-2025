@@ -8,17 +8,12 @@ import (
 )
 
 type part1Answer = int
-type direction int
+type direction string
 type lockReading int
 
 const (
-	left direction = iota
-	right
-)
-
-const (
-	leftcode  string = "L"
-	rightcode string = "R"
+	left  direction = "L"
+	right direction = "R"
 )
 
 const safeDialNumberCount int = 100
@@ -26,17 +21,6 @@ const safeDialNumberCount int = 100
 type rotation struct {
 	direction direction
 	distance  int
-}
-
-func (r rotation) String() string {
-	var directionCode string
-	switch r.direction {
-	case left:
-		directionCode = leftcode
-	case right:
-		directionCode = rightcode
-	}
-	return fmt.Sprintf("{%s %d}", directionCode, r.distance)
 }
 
 func Run() (part1Answer, error) {
@@ -100,12 +84,12 @@ func parseLine(line string) (rotation, error) {
 
 func parseDirection(directionCode string) (direction, error) {
 	switch directionCode {
-	case leftcode:
+	case string(left):
 		return left, nil
-	case rightcode:
+	case string(right):
 		return right, nil
 	default:
-		return -1, fmt.Errorf("Cannot parse direction code %q", directionCode)
+		return "", fmt.Errorf("Cannot parse direction code %q", directionCode)
 	}
 }
 
