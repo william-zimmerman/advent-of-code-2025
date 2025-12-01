@@ -40,7 +40,7 @@ func (r rotation) String() string {
 }
 
 func Run() (part1Answer, error) {
-	bytes, error := os.ReadFile("day1/day1_input.txt")
+	bytes, error := os.ReadFile("day1/input.txt")
 
 	if error != nil {
 		return 0, error
