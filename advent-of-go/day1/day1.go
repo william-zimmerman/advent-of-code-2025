@@ -28,6 +28,17 @@ type rotation struct {
 	distance  int
 }
 
+func (r rotation) String() string {
+	var directionCode string
+	switch r.direction {
+	case left:
+		directionCode = leftcode
+	case right:
+		directionCode = rightcode
+	}
+	return fmt.Sprintf("{%s %d}", directionCode, r.distance)
+}
+
 func Run() (part1Answer, error) {
 	bytes, error := os.ReadFile("day1/day1_input.txt")
 
@@ -44,15 +55,16 @@ func Run() (part1Answer, error) {
 	}
 
 	currentLockReading := lockReading(50)
-	zeroReadingCount := 0
+	cumulativeRotationsPastZero := 0
+
 	for _, rotation := range rotations {
-		currentLockReading = apply(rotation, currentLockReading)
-		if currentLockReading == 0 {
-			zeroReadingCount++
-		}
+		newLockReading, rotationsPastZero := apply(rotation, currentLockReading)
+		fmt.Printf("Applied rotation %v; ended on reading %v; saw %d rotations past zero\n", rotation, newLockReading, rotationsPastZero)
+		currentLockReading = newLockReading
+		cumulativeRotationsPastZero += rotationsPastZero
 	}
 
-	return zeroReadingCount, nil
+	return cumulativeRotationsPastZero, nil
 }
 
 func mapLines(lines []string) ([]rotation, error) {
@@ -97,7 +109,7 @@ func parseDirection(directionCode string) (direction, error) {
 	}
 }
 
-func apply(r rotation, lr lockReading) lockReading {
+func apply(r rotation, lr lockReading) (lockReading, int) {
 	switch r.direction {
 	case right:
 		return rotateRight(r.distance, lr)
@@ -108,16 +120,30 @@ func apply(r rotation, lr lockReading) lockReading {
 	}
 }
 
-func rotateRight(distance int, currentReading lockReading) lockReading {
-	newReading := (distance + int(currentReading)) % safeDialNumberCount
-	return lockReading(newReading)
+func rotateRight(distance int, currentReading lockReading) (lockReading, int) {
+	numberOfCompleteRotations := distance / safeDialNumberCount
+	effectiveDistance := distance % safeDialNumberCount
+	newReading := int(currentReading) + effectiveDistance
+
+	additionalRotationsPastZero := newReading / safeDialNumberCount
+
+	return lockReading(newReading % safeDialNumberCount), numberOfCompleteRotations + additionalRotationsPastZero
 }
 
-func rotateLeft(distance int, currentReading lockReading) lockReading {
+func rotateLeft(distance int, currentReading lockReading) (lockReading, int) {
+	numberOfCompleteRotations := distance / safeDialNumberCount
 	effectiveDistance := distance % safeDialNumberCount
+	additionalRotationsPastZero := 0
+
 	newReading := int(currentReading) - effectiveDistance
 	if newReading < 0 {
 		newReading += safeDialNumberCount
+		if currentReading != 0 {
+			additionalRotationsPastZero++
+		}
+	} else if currentReading != 0 && newReading == 0 {
+		additionalRotationsPastZero++
 	}
-	return lockReading(newReading)
+
+	return lockReading(newReading), numberOfCompleteRotations + additionalRotationsPastZero
 }
