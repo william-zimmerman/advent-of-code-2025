@@ -97,18 +97,19 @@ func invalidIds(idRange idRange) []int {
 	for id := range idRange.all() {
 		stringValue := strconv.Itoa(id)
 
-		if len(stringValue)%2 != 0 {
-			continue
+		for i := 1; i <= len(stringValue)/2; i++ {
+			if len(stringValue)%i != 0 {
+				continue
+			}
+			prefix := stringValue[:i]
+			repeatedPrefix := strings.Repeat(prefix, len(stringValue)/i)
+
+			if repeatedPrefix == stringValue {
+				invalidIds = append(invalidIds, id)
+				break
+			}
 		}
 
-		midpoint := len(stringValue) / 2
-
-		firstHalf := stringValue[:midpoint]
-		secondHalf := stringValue[midpoint:]
-
-		if firstHalf == secondHalf {
-			invalidIds = append(invalidIds, id)
-		}
 	}
 
 	return invalidIds
