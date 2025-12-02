@@ -1,13 +1,13 @@
 package main
 
 import (
-	"advent-of-go/day1"
+	"advent-of-go/day2"
 	"fmt"
 	"os"
 )
 
 func main() {
-	answer, error := day1.Run()
+	answer, error := day2.Run()
 
 	if error != nil {
 		fmt.Fprintf(os.Stderr, "Encountered error: %s\n", error.Error())
