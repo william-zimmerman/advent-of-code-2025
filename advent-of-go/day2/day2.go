@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"iter"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/samber/lo"
 )
 
 type idRange struct {
@@ -37,17 +40,17 @@ func Run() (int, error) {
 		return 0, error
 	}
 
-	allInvalidIds := []int{}
-	for _, idRange := range idRanges {
-		allInvalidIds = append(allInvalidIds, invalidIds(idRange)...)
-	}
+	allIds := lo.FlatMap(idRanges, func(idRange idRange, _ int) []int {
+		return slices.Collect(idRange.all())
+	})
 
-	sumOfInvalidIds := 0
-	for _, id := range allInvalidIds {
-		sumOfInvalidIds += id
-	}
+	allInvalidIds := lo.Filter(allIds, func(id int, _ int) bool {
+		return isInvalid(id)
+	})
 
-	return sumOfInvalidIds, nil
+	answer := lo.Sum(allInvalidIds)
+
+	return answer, nil
 }
 
 func parseInput(input string) ([]idRange, error) {
@@ -90,27 +93,20 @@ func parseInput(input string) ([]idRange, error) {
 	return idRanges, nil
 }
 
-func invalidIds(idRange idRange) []int {
+func isInvalid(id int) bool {
+	stringValue := strconv.Itoa(id)
 
-	invalidIds := []int{}
-
-	for id := range idRange.all() {
-		stringValue := strconv.Itoa(id)
-
-		for i := 1; i <= len(stringValue)/2; i++ {
-			if len(stringValue)%i != 0 {
-				continue
-			}
-			prefix := stringValue[:i]
-			repeatedPrefix := strings.Repeat(prefix, len(stringValue)/i)
-
-			if repeatedPrefix == stringValue {
-				invalidIds = append(invalidIds, id)
-				break
-			}
+	for i := 1; i <= len(stringValue)/2; i++ {
+		if len(stringValue)%i != 0 {
+			continue
 		}
+		prefix := stringValue[:i]
+		repeatedPrefix := strings.Repeat(prefix, len(stringValue)/i)
 
+		if repeatedPrefix == stringValue {
+			return true
+		}
 	}
 
-	return invalidIds
+	return false
 }
