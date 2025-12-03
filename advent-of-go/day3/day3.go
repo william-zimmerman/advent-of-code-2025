@@ -3,6 +3,7 @@ package day3
 import (
 	"cmp"
 	"fmt"
+	"math"
 	"os"
 	"slices"
 	"strconv"
@@ -62,17 +63,27 @@ func parseInput(strings []string) ([]batteryBank, error) {
 
 func maxJoltage(bBank batteryBank) int {
 
-	allButFinalBattery := bBank[:len(bBank)-1]
+	maxJoltage := 0
+	indexOfPreviouslySelectedBattery := -1
 
-	tensDigitBattery := slices.MaxFunc(allButFinalBattery, func(b1, b2 battery) int {
-		return cmp.Compare(b1.joltage, b2.joltage)
-	})
+	for i := 11; i >= 0; i-- {
+		maxIndexForNextBatteryExclusive := len(bBank) - i
+		candidateBatteries := bBank[indexOfPreviouslySelectedBattery+1 : maxIndexForNextBatteryExclusive]
 
-	onesDigitCandidates := bBank[tensDigitBattery.index+1:]
+		chosenBattery := slices.MaxFunc(candidateBatteries, func(b1, b2 battery) int {
+			return cmp.Compare(b1.joltage, b2.joltage)
+		})
 
-	onesDigitBattery := slices.MaxFunc(onesDigitCandidates, func(b1, b2 battery) int {
-		return cmp.Compare(b1.joltage, b2.joltage)
-	})
+		indexOfPreviouslySelectedBattery = chosenBattery.index
+		maxJoltage += chosenBattery.joltage * int(math.Pow10(i))
+	}
 
-	return (tensDigitBattery.joltage * 10) + onesDigitBattery.joltage
+	return maxJoltage
+}
+
+func max(a, b int) int {
+	if a >= b {
+		return a
+	}
+	return b
 }
