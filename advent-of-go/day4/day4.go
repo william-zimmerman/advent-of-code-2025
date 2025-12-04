@@ -35,20 +35,36 @@ func Run() (int, error) {
 
 	puzzleMap := parseInput(strings.Fields(string(bytes)))
 
-	isPaper := func(c coordinate) bool {
-		return puzzleMap.isPaper(c)
-	}
-
-	accessibleRollsOfPaper := 0
-	for coordinate := range filter(maps.Keys(puzzleMap), isPaper) {
-		paperNeighborCount := len(slices.Collect(filter(coordinate.neighbors(), isPaper)))
-		if paperNeighborCount < 4 {
-			accessibleRollsOfPaper++
+	totalRemovedRolls := 0
+	for {
+		removedRolls := removeAccessibleRollsOfPaper(puzzleMap)
+		totalRemovedRolls += removedRolls
+		if removedRolls == 0 {
+			break
 		}
-
 	}
 
-	return accessibleRollsOfPaper, nil
+	return totalRemovedRolls, nil
+}
+
+func removeAccessibleRollsOfPaper(puzzleMap puzzleMap) int {
+
+	isPaper := predicate[coordinate](func(c coordinate) bool {
+		return puzzleMap.isPaper(c)
+	})
+
+	isAccessible := predicate[coordinate](func(c coordinate) bool {
+		paperNeighborCount := len(slices.Collect(filter(c.neighbors(), isPaper)))
+		return paperNeighborCount < 4
+	})
+
+	accessibleRollsOfPaper := slices.Collect(filter(maps.Keys(puzzleMap), and(isPaper, isAccessible)))
+
+	for _, coordinate := range accessibleRollsOfPaper {
+		puzzleMap[coordinate] = empty
+	}
+
+	return len(accessibleRollsOfPaper)
 }
 
 func parseInput(lines []string) puzzleMap {
@@ -84,6 +100,12 @@ func filter[T any](items iter.Seq[T], p predicate[T]) iter.Seq[T] {
 				return
 			}
 		}
+	}
+}
+
+func and[T any](p1, p2 predicate[T]) predicate[T] {
+	return func(t T) bool {
+		return p1(t) && p2(t)
 	}
 }
 
