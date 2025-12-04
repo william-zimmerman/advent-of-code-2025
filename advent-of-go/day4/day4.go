@@ -75,10 +75,12 @@ func (c coordinate) neighbors() iter.Seq[coordinate] {
 	}
 }
 
-func filter[T any](items iter.Seq[T], predicate func(t T) bool) iter.Seq[T] {
+type predicate[T any] func(t T) bool
+
+func filter[T any](items iter.Seq[T], p predicate[T]) iter.Seq[T] {
 	return func(yield func(t T) bool) {
 		for item := range items {
-			if predicate(item) && !yield(item) {
+			if p(item) && !yield(item) {
 				return
 			}
 		}
