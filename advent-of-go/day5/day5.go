@@ -2,7 +2,6 @@ package day5
 
 import (
 	"cmp"
-	"iter"
 	"os"
 	"slices"
 	"strconv"
@@ -15,16 +14,6 @@ type freshIngredientRange struct {
 	from, to ingedientId
 }
 
-func (f freshIngredientRange) all() iter.Seq[ingedientId] {
-	return func(yield func(ingedientId) bool) {
-		for i := f.from; i <= f.to; i++ {
-			if !yield(i) {
-				return
-			}
-		}
-	}
-}
-
 func (f freshIngredientRange) contains(id ingedientId) bool {
 	return f.from <= id && f.to >= id
 }
@@ -35,9 +24,7 @@ func (f freshIngredientRange) len() int {
 
 func (this freshIngredientRange) overlapsWith(that freshIngredientRange) bool {
 	ranges := []freshIngredientRange{this, that}
-	slices.SortFunc(ranges, func(f1, f2 freshIngredientRange) int {
-		return cmp.Compare(f1.from, f2.from)
-	})
+	slices.SortFunc(ranges, sortAscending)
 
 	return ranges[1].from <= ranges[0].to
 }
@@ -62,6 +49,10 @@ func max(i1, i2 ingedientId) ingedientId {
 	return i2
 }
 
+func sortAscending(f1, f2 freshIngredientRange) int {
+	return cmp.Compare(f1.from, f2.from)
+}
+
 type ingedientId int
 
 func Run() (int, error) {
@@ -77,9 +68,7 @@ func Run() (int, error) {
 		return 0, error
 	}
 
-	slices.SortFunc(freshIngredientRanges, func(a, b freshIngredientRange) int {
-		return cmp.Compare(a.from, b.from)
-	})
+	slices.SortFunc(freshIngredientRanges, sortAscending)
 
 	mergedRanges := merge(freshIngredientRanges)
 
@@ -142,6 +131,10 @@ func isFresh(freshIngredientsSorted []freshIngredientRange, ingredientId ingedie
 
 func merge(ranges []freshIngredientRange) []freshIngredientRange {
 	// assume ranges is sorted
+
+	if len(ranges) == 0 {
+		return ranges
+	}
 
 	mergedRanges := []freshIngredientRange{}
 
