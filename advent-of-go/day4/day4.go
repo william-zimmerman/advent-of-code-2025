@@ -6,6 +6,8 @@ import (
 	"os"
 	"slices"
 	"strings"
+
+	"github.com/samber/lo/it"
 )
 
 type coordinate struct {
@@ -49,16 +51,16 @@ func Run() (int, error) {
 
 func removeAccessibleRollsOfPaper(puzzleMap puzzleMap) int {
 
-	isPaper := predicate[coordinate](func(c coordinate) bool {
+	isPaper := func(c coordinate) bool {
 		return puzzleMap.isPaper(c)
-	})
+	}
 
-	isAccessible := predicate[coordinate](func(c coordinate) bool {
-		paperNeighborCount := len(slices.Collect(filter(c.neighbors(), isPaper)))
+	isAccessible := func(c coordinate) bool {
+		paperNeighborCount := len(slices.Collect(it.Filter(c.neighbors(), isPaper)))
 		return paperNeighborCount < 4
-	})
+	}
 
-	accessibleRollsOfPaper := slices.Collect(filter(maps.Keys(puzzleMap), and(isPaper, isAccessible)))
+	accessibleRollsOfPaper := slices.Collect(it.Filter(maps.Keys(puzzleMap), and(isPaper, isAccessible)))
 
 	for _, coordinate := range accessibleRollsOfPaper {
 		puzzleMap[coordinate] = empty
@@ -92,16 +94,6 @@ func (c coordinate) neighbors() iter.Seq[coordinate] {
 }
 
 type predicate[T any] func(t T) bool
-
-func filter[T any](items iter.Seq[T], p predicate[T]) iter.Seq[T] {
-	return func(yield func(t T) bool) {
-		for item := range items {
-			if p(item) && !yield(item) {
-				return
-			}
-		}
-	}
-}
 
 func and[T any](p1, p2 predicate[T]) predicate[T] {
 	return func(t T) bool {

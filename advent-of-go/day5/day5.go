@@ -7,8 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BooleanCat/go-functional/v2/it"
-	"github.com/BooleanCat/go-functional/v2/it/op"
+	"github.com/samber/lo/it"
 )
 
 type freshIngredientRange struct {
@@ -75,7 +74,7 @@ func Run() (int, error) {
 
 	lengths := it.Map(slices.Values(mergedRanges), rangeLen)
 
-	sumOfLengths := it.Fold(lengths, op.Add, 0)
+	sumOfLengths := it.Sum(lengths)
 
 	return sumOfLengths, nil
 }
