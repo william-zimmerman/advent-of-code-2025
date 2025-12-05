@@ -7,7 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/samber/lo"
+	"github.com/BooleanCat/go-functional/v2/it"
+	"github.com/BooleanCat/go-functional/v2/it/op"
 )
 
 type freshIngredientRange struct {
@@ -18,7 +19,7 @@ func (f freshIngredientRange) contains(id ingedientId) bool {
 	return f.from <= id && f.to >= id
 }
 
-func (f freshIngredientRange) len() int {
+func rangeLen(f freshIngredientRange) int {
 	return int(f.to) - int(f.from) + 1
 }
 
@@ -72,11 +73,11 @@ func Run() (int, error) {
 
 	mergedRanges := merge(freshIngredientRanges)
 
-	lengths := lo.Map(mergedRanges, func(f freshIngredientRange, _ int) int {
-		return f.len()
-	})
+	lengths := it.Map(slices.Values(mergedRanges), rangeLen)
 
-	return lo.Sum(lengths), nil
+	sumOfLengths := it.Fold(lengths, op.Add, 0)
+
+	return sumOfLengths, nil
 }
 
 func parseInput(lines []string) ([]freshIngredientRange, []ingedientId, error) {
