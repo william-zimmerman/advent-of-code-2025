@@ -27,13 +27,12 @@ func (p problem) solve() int {
 }
 
 const (
-	mult = "*"
-	add  = "+"
+	mult  = "*"
+	add   = "+"
+	space = " "
 )
 
 func Run() (int, error) {
-
-	fmt.Println("Hello from day6!")
 
 	bytes, error := os.ReadFile("day6/input.txt")
 	if error != nil {
@@ -42,8 +41,6 @@ func Run() (int, error) {
 
 	lines := slices.Collect(strings.Lines(string(bytes)))
 	problems, error := parseInput(lines)
-
-	fmt.Println(problems)
 
 	if error != nil {
 		return 0, fmt.Errorf("Error parsing input: %v", error)
@@ -58,9 +55,9 @@ func parseInput(lines []string) ([]problem, error) {
 
 	operatorRow := len(lines) - 1
 	operators := strings.Fields(lines[operatorRow])
-	nextOperatorIndex := 0
+	operatorIndex := 0
 
-	sanitizedLines := lo.Map(lines, func(s string, _ int) string { return strings.TrimRight(s, "\n") })
+	sanitizedLines := lo.Map(lines, func(s string, _ int) string { return strings.TrimRight(s, "\n") + space })
 
 	maxLineWidth := lo.Max(lo.Map(sanitizedLines, func(s string, _ int) int { return len(s) }))
 
@@ -78,15 +75,15 @@ func parseInput(lines []string) ([]problem, error) {
 			}
 
 			char := string(sanitizedLines[rowIndex][columnIndex])
-			if char != " " {
+			if char != space {
 				currentNumberBuffer.WriteString(char)
 			}
 		}
 
 		if "" == currentNumberBuffer.String() {
-			problems = append(problems, problem{numbers, operators[nextOperatorIndex]})
+			problems = append(problems, problem{numbers, operators[operatorIndex]})
 			numbers = []int{}
-			nextOperatorIndex++
+			operatorIndex++
 			continue
 		}
 
@@ -96,16 +93,7 @@ func parseInput(lines []string) ([]problem, error) {
 			return nil, fmt.Errorf("Error parsing string: %v", error)
 		}
 
-		fmt.Println("Parsed ", intVal)
-
 		numbers = append(numbers, intVal)
-
-		if columnIndex+1 == maxLineWidth {
-			problems = append(problems, problem{numbers, operators[nextOperatorIndex]})
-			numbers = []int{}
-			nextOperatorIndex++
-			continue
-		}
 	}
 
 	return problems, nil
