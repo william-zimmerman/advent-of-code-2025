@@ -43,6 +43,8 @@ func Run() (int, error) {
 	lines := slices.Collect(strings.Lines(string(bytes)))
 	problems, error := parseInput(lines)
 
+	fmt.Println(problems)
+
 	if error != nil {
 		return 0, fmt.Errorf("Error parsing input: %v", error)
 	}
@@ -55,24 +57,55 @@ func Run() (int, error) {
 func parseInput(lines []string) ([]problem, error) {
 
 	operatorRow := len(lines) - 1
-	matrix := slices.Collect(it.Map(slices.Values(lines), strings.Fields))
-	columnCount := len(matrix[0])
+	operators := strings.Fields(lines[operatorRow])
+	nextOperatorIndex := 0
+
+	sanitizedLines := lo.Map(lines, func(s string, _ int) string { return strings.TrimRight(s, "\n") })
+
+	maxLineWidth := lo.Max(lo.Map(sanitizedLines, func(s string, _ int) int { return len(s) }))
 
 	problems := []problem{}
-	for columnIndex := range columnCount {
-		problemInput := []int{}
+	numbers := []int{}
+
+	for columnIndex := range maxLineWidth {
+
+		currentNumberBuffer := strings.Builder{}
+
 		for rowIndex := range operatorRow {
 
-			intVal, error := strconv.Atoi(matrix[rowIndex][columnIndex])
-
-			if error != nil {
-				return nil, error
+			if columnIndex >= len(sanitizedLines[rowIndex]) {
+				continue
 			}
 
-			problemInput = append(problemInput, intVal)
+			char := string(sanitizedLines[rowIndex][columnIndex])
+			if char != " " {
+				currentNumberBuffer.WriteString(char)
+			}
 		}
 
-		problems = append(problems, problem{problemInput, matrix[operatorRow][columnIndex]})
+		if "" == currentNumberBuffer.String() {
+			problems = append(problems, problem{numbers, operators[nextOperatorIndex]})
+			numbers = []int{}
+			nextOperatorIndex++
+			continue
+		}
+
+		intVal, error := strconv.Atoi(currentNumberBuffer.String())
+
+		if error != nil {
+			return nil, fmt.Errorf("Error parsing string: %v", error)
+		}
+
+		fmt.Println("Parsed ", intVal)
+
+		numbers = append(numbers, intVal)
+
+		if columnIndex+1 == maxLineWidth {
+			problems = append(problems, problem{numbers, operators[nextOperatorIndex]})
+			numbers = []int{}
+			nextOperatorIndex++
+			continue
+		}
 	}
 
 	return problems, nil
