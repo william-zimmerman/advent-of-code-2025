@@ -8,6 +8,7 @@ import (
 )
 
 type matrix map[coordinate]string
+type pathCountCache map[coordinate]int
 
 type coordinate struct {
 	x, y int
@@ -47,13 +48,14 @@ func Run() (int, error) {
 
 	matrix := parseInput(string(bytes))
 
-	manifoldsEncountered, error := applyTaychonBeams(matrix)
+	pathCountCache := pathCountCache{}
+	uniquePathCount, error := uniquePaths(matrix, pathCountCache)
 
 	if error != nil {
-		return 0, fmt.Errorf("Error encountered applying beams: %w", error)
+		return 0, fmt.Errorf("Error calculating unique path count: %w", error)
 	}
 
-	return manifoldsEncountered, nil
+	return uniquePathCount, nil
 }
 
 func parseInput(fileContents string) matrix {
@@ -75,6 +77,45 @@ func parseInput(fileContents string) matrix {
 	}
 
 	return matrix
+}
+
+func uniquePaths(matrix matrix, cache pathCountCache) (int, error) {
+	rootNodeCoordinate, error := manifoldEntrace(matrix)
+
+	if error != nil {
+		return 0, error
+	}
+
+	return uniquePathsFromCoordinate(matrix, rootNodeCoordinate, cache), nil
+}
+
+func uniquePathsFromCoordinate(m matrix, c coordinate, cache pathCountCache) int {
+	coordinateValue, found := m[c]
+
+	if !found {
+		return 1
+	}
+
+	switch coordinateValue {
+	case start, empty:
+		return uniquePathsFromCoordinate(m, c.south(), cache)
+	case manifold:
+		pathsToEast, found := cache[c.east()]
+		if !found {
+			pathsToEast = uniquePathsFromCoordinate(m, c.east(), cache)
+			cache[c.east()] = pathsToEast
+		}
+
+		pathsToWest, found := cache[c.west()]
+		if !found {
+			pathsToWest = uniquePathsFromCoordinate(m, c.west(), cache)
+			cache[c.west()] = pathsToWest
+		}
+
+		return pathsToEast + pathsToWest
+	}
+
+	panic(fmt.Sprintf("Unexpected coordinate value %q encountered at %v", coordinateValue, c))
 }
 
 func applyTaychonBeams(m matrix) (int, error) {
