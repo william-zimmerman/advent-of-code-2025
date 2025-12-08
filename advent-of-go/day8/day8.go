@@ -28,7 +28,7 @@ func Run() (int, error) {
 	}
 
 	var distanceComparator utils.Comparator = func(a, b any) int {
-		return utils.Float64Comparator(a.(types.JunctionBoxDistance).Distance, b.(types.JunctionBoxDistance).Distance)
+		return utils.Float64Comparator(a.(types.JunctionBoxPair).Distance, b.(types.JunctionBoxPair).Distance)
 	}
 
 	// TODO: replace this min heap with a slice and then sort
@@ -37,19 +37,19 @@ func Run() (int, error) {
 	for pair := range uniquePairs(junctionBoxes) {
 		box1, box2 := pair[0], pair[1]
 		distance := distance(box1, box2)
-		junctionBoxDistanceMinHeap.Push(types.JunctionBoxDistance{Box1: box1, Box2: box2, Distance: distance})
+		junctionBoxDistanceMinHeap.Push(types.JunctionBoxPair{Box1: box1, Box2: box2, Distance: distance})
 	}
 
 	circuitMap := types.InitCircuitMap(junctionBoxes...)
 
-	lastJunctionBoxesToBeConnected := types.JunctionBoxDistance{}
+	lastJunctionBoxesToBeConnected := types.JunctionBoxPair{}
 	for circuitMap.UniqueCircuitCount() > 1 {
 		untyped, poppedElement := junctionBoxDistanceMinHeap.Pop()
 
 		if poppedElement {
-			junctionBoxDistance := untyped.(types.JunctionBoxDistance)
-			lastJunctionBoxesToBeConnected = junctionBoxDistance
-			circuitMap.Connect(junctionBoxDistance.Box1, junctionBoxDistance.Box2)
+			junctionBoxPair := untyped.(types.JunctionBoxPair)
+			lastJunctionBoxesToBeConnected = junctionBoxPair
+			circuitMap.Connect(junctionBoxPair.Box1, junctionBoxPair.Box2)
 		} else {
 			return 0, fmt.Errorf("Ran out of junction boxes to connect")
 		}

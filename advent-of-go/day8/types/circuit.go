@@ -13,7 +13,7 @@ type JunctionBox struct {
 	X, Y, Z int
 }
 
-type JunctionBoxDistance struct {
+type JunctionBoxPair struct {
 	Box1, Box2 JunctionBox
 	Distance   float64
 }
@@ -60,7 +60,7 @@ func (c *circuitMap) Connect(b1, b2 JunctionBox) {
 	box2CircuitId, box2BelongsToCircuit := c.circuitIdByJunctionBox[b2]
 
 	if !box1BelongsToCircuit || !box2BelongsToCircuit {
-		panic("expecting both junction boxes to belong to circuit")
+		panic("expecting both junction boxes to belong to circuit map")
 	}
 
 	if box1CircuitId == box2CircuitId {
