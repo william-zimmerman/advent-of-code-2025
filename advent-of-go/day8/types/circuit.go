@@ -41,34 +41,26 @@ type circuitMap struct {
 	circuitById            map[uuid.UUID]Circuit
 }
 
-func NewCircuitMap() circuitMap {
-	return circuitMap{map[JunctionBox]uuid.UUID{}, map[uuid.UUID]Circuit{}}
+func InitCircuitMap(boxes ...JunctionBox) circuitMap {
+	circuitMap := circuitMap{map[JunctionBox]uuid.UUID{}, map[uuid.UUID]Circuit{}}
+
+	for _, box := range boxes {
+		circuitId := uuid.New()
+		circuitMap.circuitIdByJunctionBox[box] = circuitId
+		circuit := Circuit{}
+		circuit.add(box)
+		circuitMap.circuitById[circuitId] = circuit
+	}
+
+	return circuitMap
 }
 
 func (c *circuitMap) Connect(b1, b2 JunctionBox) {
 	box1CircuitId, box1BelongsToCircuit := c.circuitIdByJunctionBox[b1]
 	box2CircuitId, box2BelongsToCircuit := c.circuitIdByJunctionBox[b2]
 
-	if !box1BelongsToCircuit && !box2BelongsToCircuit {
-		circuitId := uuid.New()
-		c.circuitIdByJunctionBox[b1] = circuitId
-		c.circuitIdByJunctionBox[b2] = circuitId
-		circuit := Circuit{}
-		circuit.add(b1, b2)
-		c.circuitById[circuitId] = circuit
-		return
-	}
-
-	if !box1BelongsToCircuit {
-		c.circuitIdByJunctionBox[b1] = box2CircuitId
-		c.circuitById[box2CircuitId].add(b1)
-		return
-	}
-
-	if !box2BelongsToCircuit {
-		c.circuitIdByJunctionBox[b2] = box1CircuitId
-		c.circuitById[box1CircuitId].add(b2)
-		return
+	if !box1BelongsToCircuit || !box2BelongsToCircuit {
+		panic("expecting both junction boxes to belong to circuit")
 	}
 
 	if box1CircuitId == box2CircuitId {
@@ -84,4 +76,8 @@ func (c *circuitMap) Connect(b1, b2 JunctionBox) {
 
 func (c circuitMap) Circuits() []Circuit {
 	return slices.Collect(maps.Values(c.circuitById))
+}
+
+func (c circuitMap) UniqueCircuitCount() int {
+	return it.Length(maps.Keys(c.circuitById))
 }

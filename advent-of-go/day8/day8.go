@@ -2,7 +2,6 @@ package day8
 
 import (
 	"advent-of-go/day8/types"
-	"cmp"
 	"fmt"
 	"iter"
 	"math"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/emirpasic/gods/trees/binaryheap"
 	"github.com/emirpasic/gods/utils"
-	"github.com/samber/lo"
 )
 
 func Run() (int, error) {
@@ -42,23 +40,22 @@ func Run() (int, error) {
 		junctionBoxDistanceMinHeap.Push(types.JunctionBoxDistance{Box1: box1, Box2: box2, Distance: distance})
 	}
 
-	circuitMap := types.NewCircuitMap()
+	circuitMap := types.InitCircuitMap(junctionBoxes...)
 
-	for range 1000 {
+	lastJunctionBoxesToBeConnected := types.JunctionBoxDistance{}
+	for circuitMap.UniqueCircuitCount() > 1 {
 		untyped, poppedElement := junctionBoxDistanceMinHeap.Pop()
 
 		if poppedElement {
 			junctionBoxDistance := untyped.(types.JunctionBoxDistance)
+			lastJunctionBoxesToBeConnected = junctionBoxDistance
 			circuitMap.Connect(junctionBoxDistance.Box1, junctionBoxDistance.Box2)
+		} else {
+			return 0, fmt.Errorf("Ran out of junction boxes to connect")
 		}
 	}
 
-	circuitsInDescendingLength := circuitMap.Circuits()
-	slices.SortFunc(circuitsInDescendingLength, func(c1, c2 types.Circuit) int {
-		return -cmp.Compare(c1.Len(), c2.Len())
-	})
-
-	answer := lo.Product(lo.Map(circuitsInDescendingLength[:3], func(c types.Circuit, _ int) int { return c.Len() }))
+	answer := lastJunctionBoxesToBeConnected.Box1.X * lastJunctionBoxesToBeConnected.Box2.X
 
 	return answer, nil
 }
