@@ -7,4 +7,7 @@ require (
 	github.com/samber/lo v1.52.0
 )
 
-require golang.org/x/text v0.22.0 // indirect
+require (
+	github.com/google/uuid v1.6.0
+	golang.org/x/text v0.22.0 // indirect
+)
