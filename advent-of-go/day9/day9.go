@@ -97,3 +97,8 @@ func abs(i int) int {
 	}
 	return i
 }
+
+// find all coordinates on "perimeter"
+//
+// for each square we're considering, check if all four corners are within perimeter
+//
