@@ -3,35 +3,20 @@ package day11
 import (
 	"fmt"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/samber/lo"
-	"github.com/samber/lo/it"
 )
 
 const (
-	you = device("you")
-	out = device("out")
+	you                      = device("you")
+	out                      = device("out")
+	server                   = device("svr")
+	digitalAnalogueConverter = device("dac")
+	fastFourierTransform     = device("fft")
 )
 
 type device string
-
-type set[T comparable] map[T]struct{}
-
-type devicePath string
-
-func (d devicePath) add(tail device) devicePath {
-	return devicePath(fmt.Sprintf("%s;%s", d, tail))
-}
-
-func (d devicePath) contains(target device) bool {
-	return strings.Contains(string(d), string(target))
-}
-
-func newPath() devicePath {
-	return ""
-}
 
 func Run() (int, error) {
 
@@ -46,9 +31,8 @@ func Run() (int, error) {
 		return 0, fmt.Errorf("error parsing input: %w", err)
 	}
 
-	answer := pathsToOut(you, deviceMap)
-
-	return answer, nil
+	devicePaths := pathsToOut(server, deviceMap)
+	return devicePaths, nil
 }
 
 func parseInput(fileContents string) (map[device][]device, error) {
@@ -86,29 +70,49 @@ func parseInput(fileContents string) (map[device][]device, error) {
 
 func pathsToOut(start device, deviceMap map[device][]device) int {
 
-	var pathsToOutRecurse func(start device, circuitMap map[device][]device, currentPath devicePath) int
-	pathsToOutRecurse = func(start device, circuitMap map[device][]device, currentPath devicePath) int {
+	type cacheKey struct {
+		device   device
+		foundDac bool
+		foundFft bool
+	}
 
-		if start == out {
-			return 1
+	cache := make(map[cacheKey]int, len(deviceMap)*4)
+
+	var pathsToOutRecurse func(d device, foundDac bool, foundFft bool) int
+	pathsToOutRecurse = func(d device, foundDac bool, foundFft bool) int {
+
+		fmt.Println(d)
+
+		if d == out {
+			if foundDac && foundFft {
+				return 1
+			} else {
+				return 0
+			}
 		}
 
-		if currentPath.contains(start) {
-			return 0
+		key := cacheKey{d, foundDac, foundFft}
+		if cachedValue, cacheHit := cache[key]; cacheHit {
+			return cachedValue
 		}
 
-		connectedDevices, found := circuitMap[start]
-
+		childDevices, found := deviceMap[d]
 		if !found {
 			return 0
 		}
 
-		paths := it.Sum(it.Map(slices.Values(connectedDevices), func(d device) int {
-			return pathsToOutRecurse(d, circuitMap, currentPath.add(start))
-		}))
+		isFft := d == fastFourierTransform
+		isDac := d == digitalAnalogueConverter
 
-		return paths
+		sumOfChildren := 0
+		for _, child := range childDevices {
+			sumOfChildren += pathsToOutRecurse(child, foundDac || isDac, foundFft || isFft)
+		}
+
+		cache[key] = sumOfChildren
+
+		return sumOfChildren
 	}
 
-	return pathsToOutRecurse(start, deviceMap, newPath())
+	return pathsToOutRecurse(start, false, false)
 }
